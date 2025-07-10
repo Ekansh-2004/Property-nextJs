@@ -1,14 +1,19 @@
-import "../assets/styles/global.css";
+import "@/assets/styles/global.css";
+
+import Footer from "@/components/Footer";
+import NavBar from "@/components/NavBar";
 
 export const metadata = {
 	title: "Property Rental",
 };
 
-const MainLayout = () => {
+const MainLayout = ({ children }) => {
 	return (
 		<html>
 			<body>
-				<main className="text-7xl">Hello</main>
+				<NavBar />
+				<main className="text-2xl">{children}</main>
+				<Footer />
 			</body>
 		</html>
 	);
