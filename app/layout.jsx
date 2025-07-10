@@ -3,19 +3,23 @@ import "@/assets/styles/global.css";
 import Footer from "@/components/Footer";
 import NavBar from "@/components/NavBar";
 
+import AuthProvider from "@/components/AuthProvider";
+
 export const metadata = {
 	title: "Property Rental",
 };
 
 const MainLayout = ({ children }) => {
 	return (
-		<html>
-			<body>
-				<NavBar />
-				<main className="text-2xl">{children}</main>
-				<Footer />
-			</body>
-		</html>
+		<AuthProvider>
+			<html>
+				<body>
+					<NavBar />
+					<main>{children}</main>
+					<Footer />
+				</body>
+			</html>
+		</AuthProvider>
 	);
 };
 

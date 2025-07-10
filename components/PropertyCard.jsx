@@ -15,7 +15,7 @@ const PropertyCard = ({ property }) => {
 	};
 
 	return (
-		<div className="rounded-xl shadow-md relative">
+		<div className="rounded-xl shadow-md relative transition-transform duration-300 hover:scale-105">
 			<Image
 				src={`/images/properties/${property.images[0]}`}
 				alt=""
