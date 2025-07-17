@@ -1,6 +1,5 @@
 "use server";
 
-import cloudinary from "@/config/cloudinary";
 import connectDB from "@/config/database";
 import Property from "@/models/Property";
 import { getSessionUser } from "@/utils/getSessionUser";
@@ -8,7 +7,7 @@ import { getSessionUser } from "@/utils/getSessionUser";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-async function addProperty(formData) {
+async function updateProperty(propertyId, formData) {
 	await connectDB();
 
 	const sessionUser = await getSessionUser();
@@ -19,8 +18,18 @@ async function addProperty(formData) {
 
 	const { userId } = sessionUser;
 
+	const existingProperty = await Property.findById(propertyId);
+
+	if (!existingProperty) {
+		throw new Error("Property not found");
+	}
+
+	// Verify ownership
+	if (existingProperty.owner.toString() !== userId) {
+		throw new Error("Unauthorized");
+	}
+
 	const amenities = formData.getAll("amenities");
-	const images = formData.getAll("images").filter((image) => image.name !== "");
 
 	const propertyData = {
 		owner: userId,
@@ -47,34 +56,13 @@ async function addProperty(formData) {
 			email: formData.get("seller_info.email"),
 			phone: formData.get("seller_info.phone"),
 		},
+		images: existingProperty.images,
 	};
 
-	const imageUrls = [];
-
-	for (const imageFile of images) {
-		try {
-			const imageBuffer = await imageFile.arrayBuffer();
-			const imageData = Buffer.from(imageBuffer);
-
-			// Get the actual mime type or default to image/jpeg
-			const mimeType = imageFile.type || "image/jpeg";
-			const base64 = imageData.toString("base64");
-
-			const result = await cloudinary.uploader.upload(`data:${mimeType};base64,${base64}`);
-
-			imageUrls.push(result.secure_url);
-		} catch (error) {
-			console.error(`Failed to upload image ${imageFile.name}:`, error);
-			// Decide whether to continue or throw based on your requirements
-		}
-	}
-
-	propertyData.images = imageUrls;
-
-	const newProperty = new Property(propertyData);
-
-	await newProperty.save();
+	const updatedProperty = await Property.findByIdAndUpdate(propertyId, propertyData, { new: true });
 	revalidatePath("/", "layout", "/properties");
-	redirect(`/properties/${newProperty._id}`);
+
+	redirect(`/properties/${updatedProperty._id}`);
 }
-export default addProperty;
+
+export default updateProperty;

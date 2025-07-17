@@ -5,6 +5,9 @@ import NavBar from "@/components/NavBar";
 
 import AuthProvider from "@/components/AuthProvider";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export const metadata = {
 	title: "Property Rental",
 };
@@ -17,6 +20,7 @@ const MainLayout = ({ children }) => {
 					<NavBar />
 					<main>{children}</main>
 					<Footer />
+					<ToastContainer />
 				</body>
 			</html>
 		</AuthProvider>
