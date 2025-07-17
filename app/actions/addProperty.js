@@ -1,5 +1,6 @@
 "use server";
 
+import cloudinary from "@/config/cloudinary";
 import connectDB from "@/config/database";
 import Property from "@/models/Property";
 import { getSessionUser } from "@/utils/getSessionUser";
@@ -19,10 +20,7 @@ async function addProperty(formData) {
 	const { userId } = sessionUser;
 
 	const amenities = formData.getAll("amenities");
-	const images = formData
-		.getAll("images")
-		.filter((image) => image.name !== "")
-		.map((image) => image.name);
+	const images = formData.getAll("images").filter((image) => image.name !== "");
 
 	const propertyData = {
 		owner: userId,
@@ -49,12 +47,38 @@ async function addProperty(formData) {
 			email: formData.get("seller_info.email"),
 			phone: formData.get("seller_info.phone"),
 		},
-		images: images,
 	};
+
+	const imageUrls = [];
+
+	for (const imageFile of images) {
+		try {
+			const imageBuffer = await imageFile.arrayBuffer();
+			const imageData = Buffer.from(imageBuffer);
+
+			// Get the actual mime type or default to image/jpeg
+			const mimeType = imageFile.type || "image/jpeg";
+			const base64 = imageData.toString("base64");
+
+			const result = await cloudinary.uploader.upload(`data:${mimeType};base64,${base64}`, {
+				folder: "propertypulse",
+				public_id: `property_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+				overwrite: true,
+			});
+
+			imageUrls.push(result.secure_url);
+		} catch (error) {
+			console.error(`Failed to upload image ${imageFile.name}:`, error);
+			// Decide whether to continue or throw based on your requirements
+		}
+	}
+
+	propertyData.images = imageUrls;
+
 	const newProperty = new Property(propertyData);
 
-	newProperty.save();
+	await newProperty.save();
 	revalidatePath("/", "layout");
-	redirect(`/properties/${newProperty._id}  `);
+	redirect(`/properties/${newProperty._id}`);
 }
 export default addProperty;
